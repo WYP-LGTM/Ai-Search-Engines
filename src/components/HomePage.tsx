@@ -18,6 +18,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { SearchBar } from './SearchBar';
 import { SearchHistory } from './SearchHistory';
+import { AiThinkingPage } from './AiThinkingPage';
 import { useSearch } from '../contexts/SearchContext';
 import type { SearchQuery } from '../types';
 
@@ -27,6 +28,9 @@ export function HomePage() {
   
   // 控制搜索历史记录的显示/隐藏状态
   const [showHistory, setShowHistory] = useState(false);
+  
+  // 控制当前显示的页面
+  const [currentPage, setCurrentPage] = useState<'home' | 'ai-thinking' | 'fast-search' | 'multi-search'>('home');
 
   /**
    * 处理搜索提交事件
@@ -63,6 +67,41 @@ export function HomePage() {
     clearQueries();
     setShowHistory(false);
   };
+
+  // 如果当前页面不是首页，显示对应的功能页面
+  if (currentPage === 'ai-thinking') {
+    return <AiThinkingPage onBackToHome={() => setCurrentPage('home')} />;
+  }
+  
+  if (currentPage === 'fast-search') {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">快速搜索功能</h2>
+        <p className="text-gray-600 mb-6">此功能正在开发中...</p>
+        <button 
+          onClick={() => setCurrentPage('home')}
+          className="btn-primary"
+        >
+          返回首页
+        </button>
+      </div>
+    </div>;
+  }
+  
+  if (currentPage === 'multi-search') {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">多类型搜索功能</h2>
+        <p className="text-gray-600 mb-6">此功能正在开发中...</p>
+        <button 
+          onClick={() => setCurrentPage('home')}
+          className="btn-primary"
+        >
+          返回首页
+        </button>
+      </div>
+    </div>;
+  }
 
   return (
     // 主容器：全屏高度，渐变背景从蓝色到紫色
@@ -140,19 +179,22 @@ export function HomePage() {
           {/* 功能特性数据 */}
           {[
             {
-              icon: '🤖',
-              title: 'AI 智能分析',
-              description: '基于深度学习的智能分析，提供精准的搜索结果和相关性评分'
+              icon: '🧠',
+              title: 'AI 深度思考',
+              description: '智能分析与逻辑推理，帮助您进行深度思考和决策分析',
+              onClick: () => setCurrentPage('ai-thinking')
             },
             {
               icon: '⚡',
               title: '快速响应',
-              description: '优化的搜索算法，毫秒级响应，让您快速找到所需信息'
+              description: '优化的搜索算法，毫秒级响应，让您快速找到所需信息',
+              onClick: () => setCurrentPage('fast-search')
             },
             {
               icon: '🎯',
               title: '多类型搜索',
-              description: '支持网页、新闻、图片、视频等多种内容类型的智能搜索'
+              description: '支持网页、新闻、图片、视频等多种内容类型的智能搜索',
+              onClick: () => setCurrentPage('multi-search')
             }
           ].map((feature, index) => (
             // 每个功能特性卡片
@@ -161,7 +203,8 @@ export function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }} // 错开动画时间
-              className="text-center p-6 rounded-xl bg-white/60 backdrop-blur-sm border border-white/20 hover:bg-white/80 transition-all duration-300 hover:shadow-lg"
+              className="text-center p-6 rounded-xl bg-white/60 backdrop-blur-sm border border-white/20 hover:bg-white/80 transition-all duration-300 hover:shadow-lg cursor-pointer"
+              onClick={feature.onClick}
             >
               {/* 功能图标 */}
               <div className="text-4xl mb-4">{feature.icon}</div>
