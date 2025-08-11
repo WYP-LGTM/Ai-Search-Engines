@@ -14,8 +14,9 @@
  * - 提供类型安全的API接口
  */
 import { createContext, useContext, useReducer, type ReactNode } from 'react';
-import type { SearchQuery, SearchResult, SearchContextType } from '../types';
-import { generateId, mockSearchResults } from '../utils';
+import type { SearchQuery, SearchContextType } from '../types';
+import { generateId } from '../utils';
+import { searchAPI } from '../services/api';
 
 /**
  * 搜索状态接口定义
@@ -31,7 +32,7 @@ interface SearchState {
  * 使用联合类型定义所有可能的操作
  */
 type SearchAction =
-  | { type: 'ADD_QUERY'; payload: string }                                    // 添加新搜索查询
+  | { type: 'ADD_QUERY'; payload: { query: string; id: string } }            // 添加新搜索查询
   | { type: 'UPDATE_QUERY'; payload: { id: string; updates: Partial<SearchQuery> } } // 更新搜索查询
   | { type: 'SET_CURRENT_QUERY'; payload: SearchQuery | null }               // 设置当前查询
   | { type: 'CLEAR_QUERIES' }                                                 // 清空所有查询
@@ -59,8 +60,8 @@ function searchReducer(state: SearchState, action: SearchAction): SearchState {
     case 'ADD_QUERY': {
       // 创建新的搜索查询对象
       const newQuery: SearchQuery = {
-        id: generateId(),                    // 生成唯一ID
-        query: action.payload,               // 搜索关键词
+        id: action.payload.id,                // 使用传入的ID
+        query: action.payload.query,          // 搜索关键词
         timestamp: new Date().toISOString(), // 当前时间戳
         results: [],                         // 初始化为空结果数组
         isLoading: true,                     // 设置为加载状态
@@ -137,28 +138,32 @@ export function SearchProvider({ children }: { children: ReactNode }) {
    * @param query 搜索关键词
    */
   const addQuery = async (query: string) => {
+    // 生成查询ID
+    const queryId = generateId();
+    
     // 首先添加查询到状态中
-    dispatch({ type: 'ADD_QUERY', payload: query });
+    dispatch({ type: 'ADD_QUERY', payload: { query, id: queryId } });
     
     try {
-      // 模拟异步搜索操作
-      const results = await mockSearchResults(query) as SearchResult[];
+      // 使用真实API进行搜索
+      const results = await searchAPI.search(query);
       
       // 更新查询结果
       dispatch({
         type: 'UPDATE_QUERY',
         payload: {
-          id: state.queries[0]?.id || generateId(),
+          id: queryId,
           updates: { results, isLoading: false },
         },
       });
-    } catch {
+    } catch (error) {
       // 处理搜索失败的情况
+      const errorMessage = error instanceof Error ? error.message : '搜索失败，请重试';
       dispatch({
         type: 'UPDATE_QUERY',
         payload: {
-          id: state.queries[0]?.id || generateId(),
-          updates: { error: '搜索失败，请重试', isLoading: false },
+          id: queryId,
+          updates: { error: errorMessage, isLoading: false },
         },
       });
     } finally {

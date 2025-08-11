@@ -123,26 +123,44 @@ export function SearchResultsPage() {
             </div>
             
             {/* 右侧：筛选和视图切换按钮 */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               {/* 筛选按钮 - 切换筛选面板显示 */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={cn(
-                  "p-2 rounded-lg transition-colors duration-200",
-                  showFilters ? "bg-primary-100 text-primary-600" : "text-gray-500 hover:text-gray-700"
+                  "relative group px-4 py-2 rounded-xl transition-all duration-300 transform hover:scale-105",
+                  showFilters 
+                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg" 
+                    : "bg-white/70 hover:bg-white text-gray-700 border border-white/50 hover:border-blue-200/50"
                 )}
                 title="筛选选项"
               >
-                <Filter className="w-5 h-5" />
+                <div className="flex items-center space-x-2">
+                  <Filter className="w-4 h-4" />
+                  <span className="text-sm font-medium">筛选</span>
+                  {showFilters && (
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                  )}
+                </div>
+                {/* 悬停效果 */}
+                <div className={cn(
+                  "absolute inset-0 rounded-xl bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                  showFilters && "opacity-100"
+                )} />
               </button>
               
               {/* 视图切换按钮 - 在列表和网格视图间切换 */}
               <button
                 onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-                className="p-2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                className="relative group px-4 py-2 rounded-xl bg-white/70 hover:bg-white text-gray-700 border border-white/50 hover:border-blue-200/50 transition-all duration-300 transform hover:scale-105"
                 title={`切换到${viewMode === 'list' ? '网格' : '列表'}视图`}
               >
-                {viewMode === 'list' ? <Grid className="w-5 h-5" /> : <List className="w-5 h-5" />}
+                <div className="flex items-center space-x-2">
+                  {viewMode === 'list' ? <Grid className="w-4 h-4" /> : <List className="w-4 h-4" />}
+                  <span className="text-sm font-medium">{viewMode === 'list' ? '网格' : '列表'}</span>
+                </div>
+                {/* 悬停效果 */}
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </button>
             </div>
           </div>
@@ -152,24 +170,35 @@ export function SearchResultsPage() {
       {/* 主要内容区域 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 搜索信息显示区域 */}
-        <div className="mb-6">
+        <div className="mb-6 bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 rounded-2xl p-6 border border-white/50">
           <div className="flex items-center justify-between">
             <div>
               {/* 搜索标题 - 显示搜索关键词 */}
-              <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-                搜索结果: "{currentQuery.query}"
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-2">
+                🔍 搜索结果: "{currentQuery.query}"
               </h1>
               {/* 结果统计信息 */}
-              <p className="text-gray-600">
-                找到 {sortedResults.length} 个结果
-                {currentQuery.isLoading && ' (搜索中...)'}
-              </p>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <p className="text-gray-700 font-medium">
+                    找到 <span className="text-blue-600 font-bold">{sortedResults.length}</span> 个结果
+                  </p>
+                </div>
+                {currentQuery.isLoading && (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-blue-600 text-sm font-medium">搜索中...</span>
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* 错误信息显示 */}
             {currentQuery.error && (
-              <div className="text-red-600 text-sm">
-                {currentQuery.error}
+              <div className="flex items-center space-x-2 px-4 py-2 bg-red-50 border border-red-200 rounded-xl">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                <span className="text-red-600 text-sm font-medium">{currentQuery.error}</span>
               </div>
             )}
           </div>
@@ -179,63 +208,140 @@ export function SearchResultsPage() {
         <AnimatePresence>
           {showFilters && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}    // 初始状态：透明且高度为0
-              animate={{ opacity: 1, height: 'auto' }} // 动画状态：显示且自适应高度
-              exit={{ opacity: 0, height: 0 }}       // 退出状态：透明且高度为0
-              className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 rounded-2xl shadow-lg border border-white/50 p-6 backdrop-blur-sm"
             >
-              {/* 筛选选项网格布局 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* 内容类型筛选 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    内容类型
-                  </label>
-                  <select
-                    value={filters.type}
-                    onChange={(e) => setFilters({ ...filters, type: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="all">全部类型</option>
-                    <option value="web">网页</option>
-                    <option value="news">新闻</option>
-                    <option value="image">图片</option>
-                    <option value="video">视频</option>
-                  </select>
+              {/* 筛选标题 */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+                  筛选与排序
+                </h3>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse" />
+                  <span className="text-sm text-gray-600">智能筛选</span>
                 </div>
-                
-                {/* 时间范围筛选 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    时间范围
-                  </label>
-                  <select
-                    value={filters.timeRange}
-                    onChange={(e) => setFilters({ ...filters, timeRange: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="all">全部时间</option>
-                    <option value="day">过去24小时</option>
-                    <option value="week">过去一周</option>
-                    <option value="month">过去一个月</option>
-                    <option value="year">过去一年</option>
-                  </select>
+              </div>
+
+              {/* 内容类型筛选 */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  📂 内容类型
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {[
+                    { value: 'all', label: '全部类型', icon: '🌐', color: 'from-blue-500 to-cyan-500' },
+                    { value: 'web', label: '网页', icon: '🌍', color: 'from-green-500 to-emerald-500' },
+                    { value: 'news', label: '新闻', icon: '📰', color: 'from-orange-500 to-red-500' },
+                    { value: 'image', label: '图片', icon: '🖼️', color: 'from-purple-500 to-pink-500' },
+                    { value: 'video', label: '视频', icon: '🎥', color: 'from-indigo-500 to-blue-500' }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setFilters({ ...filters, type: option.value as any })}
+                      className={cn(
+                        "relative group p-3 rounded-xl transition-all duration-300 transform hover:scale-105",
+                        filters.type === option.value
+                          ? `bg-gradient-to-r ${option.color} text-white shadow-lg` // 选中状态
+                          : "bg-white/70 hover:bg-white text-gray-700 border border-white/50 hover:border-blue-200/50" // 未选中状态
+                      )}
+                    >
+                      <div className="text-center">
+                        <div className="text-lg mb-1">{option.icon}</div>
+                        <div className="text-xs font-medium">{option.label}</div>
+                      </div>
+                      {/* 悬停效果 */}
+                      <div className={cn(
+                        "absolute inset-0 rounded-xl bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                        filters.type === option.value && "opacity-100"
+                      )} />
+                    </button>
+                  ))}
                 </div>
-                
-                {/* 排序方式选择 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    排序方式
-                  </label>
-                  <select
-                    value={filters.sortBy}
-                    onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    <option value="relevance">相关性</option>
-                    <option value="date">时间</option>
-                    <option value="title">标题</option>
-                  </select>
+              </div>
+
+              {/* 时间范围筛选 */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  ⏰ 时间范围
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {[
+                    { value: 'all', label: '全部时间', icon: '∞', color: 'from-gray-500 to-gray-600' },
+                    { value: 'day', label: '24小时内', icon: '🌅', color: 'from-yellow-500 to-orange-500' },
+                    { value: 'week', label: '一周内', icon: '📅', color: 'from-blue-500 to-indigo-500' },
+                    { value: 'month', label: '一个月内', icon: '📆', color: 'from-green-500 to-teal-500' },
+                    { value: 'year', label: '一年内', icon: '🎆', color: 'from-purple-500 to-pink-500' }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setFilters({ ...filters, timeRange: option.value as any })}
+                      className={cn(
+                        "relative group p-3 rounded-xl transition-all duration-300 transform hover:scale-105",
+                        filters.timeRange === option.value
+                          ? `bg-gradient-to-r ${option.color} text-white shadow-lg`
+                          : "bg-white/70 hover:bg-white text-gray-700 border border-white/50 hover:border-blue-200/50"
+                      )}
+                    >
+                      <div className="text-center">
+                        <div className="text-lg mb-1">{option.icon}</div>
+                        <div className="text-xs font-medium">{option.label}</div>
+                      </div>
+                      <div className={cn(
+                        "absolute inset-0 rounded-xl bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                        filters.timeRange === option.value && "opacity-100"
+                      )} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 排序方式选择 */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  🔄 排序方式
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {[
+                    { value: 'relevance', label: '相关性', icon: '🎯', color: 'from-red-500 to-pink-500' },
+                    { value: 'date', label: '时间', icon: '📅', color: 'from-blue-500 to-indigo-500' },
+                    { value: 'title', label: '标题', icon: '📝', color: 'from-green-500 to-emerald-500' }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setFilters({ ...filters, sortBy: option.value as any })}
+                      className={cn(
+                        "relative group p-4 rounded-xl transition-all duration-300 transform hover:scale-105",
+                        filters.sortBy === option.value
+                          ? `bg-gradient-to-r ${option.color} text-white shadow-lg`
+                          : "bg-white/70 hover:bg-white text-gray-700 border border-white/50 hover:border-blue-200/50"
+                      )}
+                    >
+                      <div className="flex items-center justify-center space-x-3">
+                        <div className="text-xl">{option.icon}</div>
+                        <div className="text-sm font-medium">{option.label}</div>
+                      </div>
+                      <div className={cn(
+                        "absolute inset-0 rounded-xl bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                        filters.sortBy === option.value && "opacity-100"
+                      )} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 筛选操作按钮 */}
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/30">
+                <button
+                  onClick={() => setFilters({ type: 'all', timeRange: 'all', sortBy: 'relevance' })}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                >
+                  🔄 重置筛选
+                </button>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-sm text-gray-600">筛选已应用</span>
                 </div>
               </div>
             </motion.div>

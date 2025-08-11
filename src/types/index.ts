@@ -97,3 +97,24 @@ export interface FilterOptions {
   timeRange: 'all' | 'day' | 'week' | 'month' | 'year'; // 时间范围筛选
   sortBy: 'relevance' | 'date' | 'title';               // 排序方式
 }
+
+/**
+ * API错误接口
+ * 定义API调用过程中可能出现的错误信息
+ */
+export interface ApiError {
+  message: string;        // 错误消息
+  code?: number;          // 错误代码（可选）
+  details?: string;       // 详细错误信息（可选）
+}
+
+/**
+ * 搜索API响应接口
+ * 定义搜索API的统一响应格式
+ */
+export interface SearchApiResponse {
+  results: SearchResult[];    // 搜索结果数组
+  totalResults?: number;      // 总结果数量（可选）
+  searchTime?: number;        // 搜索耗时（可选）
+  error?: ApiError;           // 错误信息（可选）
+}

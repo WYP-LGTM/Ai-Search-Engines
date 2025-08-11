@@ -227,7 +227,7 @@ export function HomePage() {
           transition={{ duration: 0.8, delay: 0.8 }}
           className="mt-16 text-center text-gray-500 text-sm"
         >
-          <p>© 2024 AI 智能搜索引擎. 基于 React + TypeScript + Vite 构建</p>
+          <p>© 2025 AI 智能搜索引擎. 基于 React + TypeScript + Vite 构建</p>
         </motion.div>
       </div>
     </div>
