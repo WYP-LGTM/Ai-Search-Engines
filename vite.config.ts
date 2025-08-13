@@ -11,8 +11,8 @@ export default defineConfig({
         target: 'https://aip.baidubce.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/baidu/, '/rest/2.0/image-classify/v1'),
-        configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq) => {
+        configure: (proxy: any) => {
+          proxy.on('proxyReq', (proxyReq: any) => {
             // 添加百度AI的Access Token
             const accessToken = '24.90170d8087e172f77ae2299f47001dd3.2592000.1757509413.282335-119747291';
             

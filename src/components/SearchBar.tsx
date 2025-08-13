@@ -17,7 +17,7 @@
  * - 使用Web Speech API进行语音识别
  */
 import { useState, useRef, useEffect } from 'react';
-import { Search, Mic, Camera, Send, Volume2, VolumeX } from 'lucide-react';
+import { Search, Mic, Camera, Send, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../utils';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
@@ -50,7 +50,6 @@ export function SearchBar({
 
   // 语音识别Hook
   const {
-    status: speechStatus,
     isListening,
     isSupported: isSpeechSupported,
     transcript,

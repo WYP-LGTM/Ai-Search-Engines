@@ -35,7 +35,7 @@ export function ImageRecognition({ onSearch, className }: ImageRecognitionProps)
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [isRecognizing, setIsRecognizing] = useState(false);
-  const [recognitionType, setRecognitionType] = useState<ImageRecognitionType>(ImageRecognitionType.GENERAL);
+  const [recognitionType, setRecognitionType] = useState<ImageRecognitionTypeType>(ImageRecognitionType.GENERAL);
   const [recognitionResults, setRecognitionResults] = useState<ImageRecognitionItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isConfigValid, setIsConfigValid] = useState<boolean | null>(null);

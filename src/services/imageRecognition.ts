@@ -58,18 +58,20 @@ export interface ImageRecognitionResponse {
 /**
  * 图像识别类型枚举
  */
-export enum ImageRecognitionType {
-  GENERAL = 'general',        // 通用物体识别
-  ANIMAL = 'animal',          // 动物识别
-  PLANT = 'plant',            // 植物识别
-  DISH = 'dish',              // 菜品识别
-  CAR = 'car',                // 车辆识别
-  LANDMARK = 'landmark',      // 地标识别
-  INGREDIENT = 'ingredient',  // 果蔬识别
-  FLOWER = 'flower',          // 花卉识别
-  LOGO = 'logo',              // LOGO识别
-  PRODUCT = 'product'         // 商品识别
-}
+export const ImageRecognitionType = {
+  GENERAL: 'general',        // 通用物体识别
+  ANIMAL: 'animal',          // 动物识别
+  PLANT: 'plant',            // 植物识别
+  DISH: 'dish',              // 菜品识别
+  CAR: 'car',                // 车辆识别
+  LANDMARK: 'landmark',      // 地标识别
+  INGREDIENT: 'ingredient',  // 果蔬识别
+  FLOWER: 'flower',          // 花卉识别
+  LOGO: 'logo',              // LOGO识别
+  PRODUCT: 'product'         // 商品识别
+} as const;
+
+export type ImageRecognitionTypeType = typeof ImageRecognitionType[keyof typeof ImageRecognitionType];
 
 /**
  * 获取百度AI配置
@@ -346,7 +348,7 @@ export const imageRecognitionAPI = {
   /**
    * 根据类型进行图像识别
    */
-  recognize: async (imageFile: File, type: ImageRecognitionType = ImageRecognitionType.GENERAL): Promise<ImageRecognitionItem[]> => {
+  recognize: async (imageFile: File, type: ImageRecognitionTypeType = ImageRecognitionType.GENERAL): Promise<ImageRecognitionItem[]> => {
     switch (type) {
       case ImageRecognitionType.GENERAL:
         return recognizeGeneral(imageFile);
@@ -380,7 +382,7 @@ export const imageRecognitionAPI = {
   /**
    * 获取支持的类型列表
    */
-  getSupportedTypes: (): Array<{ value: ImageRecognitionType; label: string; icon: string }> => {
+  getSupportedTypes: (): Array<{ value: ImageRecognitionTypeType; label: string; icon: string }> => {
     return [
       { value: ImageRecognitionType.GENERAL, label: '通用物体', icon: '🔍' },
       { value: ImageRecognitionType.ANIMAL, label: '动物识别', icon: '🐾' },

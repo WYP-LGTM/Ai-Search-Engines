@@ -253,12 +253,12 @@ export const githubSearchAPI = {
       }
       
       // 转换代码搜索结果
-      const results: SearchResult[] = data.items.map((item: GitHubCodeSearchItem, index) => ({
-        id: `github_code_${item.sha}`,
-        title: `${item.name} in ${item.repository.full_name}`,
-        content: `代码片段: ${item.path}`,
+      const results: SearchResult[] = (data.items as any[]).map((item: any, index) => ({
+        id: `github_code_${item.sha || item.id}`,
+        title: `${item.name} in ${item.repository?.full_name || 'Unknown'}`,
+        content: `代码片段: ${item.path || 'Unknown'}`,
         url: item.html_url,
-        source: `GitHub Code - ${item.repository.owner.login}`,
+        source: `GitHub Code - ${item.repository?.owner?.login || 'Unknown'}`,
         timestamp: item.updated_at,
         type: 'web' as const,
         relevance: Math.max(0.5, 1 - index * 0.1),
@@ -300,7 +300,7 @@ export const githubSearchAPI = {
       }
       
       // 转换用户搜索结果
-      const results: SearchResult[] = data.items.map((item: GitHubUserSearchItem, index) => ({
+      const results: SearchResult[] = (data.items as any[]).map((item: any, index) => ({
         id: `github_user_${item.id}`,
         title: item.login,
         content: item.bio || `GitHub用户: ${item.login}`,
@@ -349,7 +349,7 @@ export const searchAPI = {
       
       // 回退到模拟数据
       const { mockSearchResults } = await import('../utils');
-      return mockSearchResults(query);
+      return mockSearchResults(query) as SearchResult[];
     }
   },
 
