@@ -468,6 +468,9 @@ export function SearchBar({
 
   // 语音识别成功状态
   const [showSuccess, setShowSuccess] = useState(false);
+  
+  // 语音识别错误倒计时状态
+  const [errorCountdown, setErrorCountdown] = useState(3);
 
   /**
    * 处理语音识别结果
@@ -496,9 +499,28 @@ export function SearchBar({
   useEffect(() => {
     if (speechError) {
       console.error('语音识别错误:', speechError);
-      // 可以在这里显示错误提示
+      
+      // 重置倒计时
+      setErrorCountdown(3);
+      
+      // 倒计时定时器
+      const countdownTimer = setInterval(() => {
+        setErrorCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownTimer);
+            resetSpeech();
+            return 3;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      return () => {
+        clearInterval(countdownTimer);
+        setErrorCountdown(3);
+      };
     }
-  }, [speechError]);
+  }, [speechError, resetSpeech]);
 
   return (
     // 主容器：带动画效果的搜索栏
@@ -598,15 +620,18 @@ export function SearchBar({
           </div>
         </div>
 
-        {/* 语音识别成功提示 */}
-        <AnimatePresence>
-          {showSuccess && (
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="mt-3 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 rounded-2xl shadow-xl border border-green-200/50 p-4 backdrop-blur-sm"
-            >
+                                                                       {/* 语音识别成功提示 */}
+           <AnimatePresence>
+             {showSuccess && (
+               <motion.div
+                 initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                 animate={{ opacity: 1, y: 0, scale: 1 }}
+                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                 className="absolute top-full left-0 right-0 z-50 mt-2 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 rounded-2xl shadow-2xl border border-green-200/50 p-4 backdrop-blur-sm"
+                 style={{
+                   boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                 }}
+               >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   {/* 成功图标 */}
@@ -640,15 +665,18 @@ export function SearchBar({
           )}
         </AnimatePresence>
 
-        {/* 语音识别错误提示 */}
-        <AnimatePresence>
-          {speechError && (
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="mt-3 bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 rounded-2xl shadow-xl border border-red-200/50 p-4 backdrop-blur-sm"
-            >
+                                                                       {/* 语音识别错误提示 */}
+           <AnimatePresence>
+             {speechError && (
+               <motion.div
+                 initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                 animate={{ opacity: 1, y: 0, scale: 1 }}
+                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                 className="absolute top-full left-0 right-0 z-50 mt-2 bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 rounded-2xl shadow-2xl border border-red-200/50 p-4 backdrop-blur-sm"
+                 style={{
+                   boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                 }}
+               >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   {/* 错误图标 */}
@@ -674,13 +702,18 @@ export function SearchBar({
                   </div>
                 </div>
                 
-                {/* 重试按钮 */}
-                <button
-                  onClick={handleVoiceSearch}
-                  className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
-                >
-                  重试
-                </button>
+                {/* 重试按钮和倒计时 */}
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-red-600 font-medium">
+                    {errorCountdown}s后自动关闭
+                  </span>
+                  <button
+                    onClick={handleVoiceSearch}
+                    className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
+                  >
+                    重试
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
