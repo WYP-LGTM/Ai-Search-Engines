@@ -16,7 +16,7 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Upload, X, Search, Eye, Info } from 'lucide-react';
 import { imageRecognitionAPI, ImageRecognitionType, type ImageRecognitionItem } from '../services/imageRecognition';
 import { cn } from '../utils';
@@ -35,7 +35,7 @@ export function ImageRecognition({ onSearch, className }: ImageRecognitionProps)
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [isRecognizing, setIsRecognizing] = useState(false);
-  const [recognitionType, setRecognitionType] = useState<ImageRecognitionTypeType>(ImageRecognitionType.GENERAL);
+  const [recognitionType, setRecognitionType] = useState<ImageRecognitionType>(ImageRecognitionType.GENERAL);
   const [recognitionResults, setRecognitionResults] = useState<ImageRecognitionItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isConfigValid, setIsConfigValid] = useState<boolean | null>(null);
@@ -143,22 +143,30 @@ export function ImageRecognition({ onSearch, className }: ImageRecognitionProps)
   /**
    * 清除当前图像
    */
-  const clearImage = useCallback(() => {
-    // 先清除预览URL，避免内存泄漏
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
+  const clearImage = useCallback((e?: React.MouseEvent) => {
+    // 防止冒泡
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
     }
-    
-    // 使用setTimeout确保DOM操作完成后再更新状态
-    setTimeout(() => {
-      setSelectedFile(null);
-      setPreviewUrl('');
-      setRecognitionResults([]);
-      setError(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+
+    // 安全撤销预览URL
+    try {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
       }
-    }, 0);
+    } catch (error) {
+      console.warn('Failed to revoke object URL:', error);
+    }
+
+    // 同步更新状态
+    setSelectedFile(null);
+    setPreviewUrl('');
+    setRecognitionResults([]);
+    setError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   }, [previewUrl]);
 
   /**
@@ -175,26 +183,36 @@ export function ImageRecognition({ onSearch, className }: ImageRecognitionProps)
     checkAPIConfig();
   }, [checkAPIConfig]);
 
+  // 组件卸载时清理资源
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        try {
+          URL.revokeObjectURL(previewUrl);
+        } catch (error) {
+          console.warn('Failed to revoke object URL on unmount:', error);
+        }
+      }
+    };
+  }, [previewUrl]);
+
   return (
     <div className={cn("w-full max-w-4xl mx-auto", className)}>
       {/* 配置检查提示 */}
-      <AnimatePresence>
-        {isConfigValid === false && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
-          >
-            <div className="flex items-center space-x-2">
-              <Info className="w-5 h-5 text-yellow-600" />
-              <span className="text-sm text-yellow-800">
-                百度AI配置未设置，请在.env.local中配置VITE_BAIDU_ACCESS_TOKEN
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isConfigValid === false && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
+        >
+          <div className="flex items-center space-x-2">
+            <Info className="w-5 h-5 text-yellow-600" />
+            <span className="text-sm text-yellow-800">
+              百度AI配置未设置，请在.env.local中配置VITE_BAIDU_ACCESS_TOKEN
+            </span>
+          </div>
+        </motion.div>
+      )}
 
       {/* 图像上传区域 */}
       <div className="mb-6">
@@ -212,50 +230,52 @@ export function ImageRecognition({ onSearch, className }: ImageRecognitionProps)
                 : "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100"
           )}
         >
-          {!selectedFile ? (
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <Upload className="w-8 h-8 text-white" />
-                </div>
+          <div className={cn("space-y-4", selectedFile ? "hidden" : undefined)}>
+            <div className="flex justify-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <Upload className="w-8 h-8 text-white" />
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  上传图像进行识别
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  支持 JPEG, PNG, GIF, BMP 格式，最大 10MB
-                </p>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                上传图像进行识别
+              </h3>
+              <p className="text-gray-600 mb-4">
+                支持 JPEG, PNG, GIF, BMP 格式，最大 10MB
+              </p>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                选择图像文件
+              </button>
+            </div>
+          </div>
+
+          <div className={cn("space-y-4", selectedFile ? undefined : "hidden")}>
+            <div className="flex justify-center">
+              <div className="relative">
+                <img
+                  src={previewUrl}
+                  alt="预览"
+                  className="max-w-full max-h-64 rounded-lg shadow-lg"
+                />
                 <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  type="button"
+                  onClick={clearImage}
+                  className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
                 >
-                  选择图像文件
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <div className="relative">
-                  <img
-                    src={previewUrl}
-                    alt="预览"
-                    className="max-w-full max-h-64 rounded-lg shadow-lg"
-                  />
-                  <button
-                    onClick={clearImage}
-                    className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+            {selectedFile && (
               <div className="text-sm text-gray-600">
                 文件名: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* 隐藏的文件输入 */}
           <input
@@ -329,93 +349,84 @@ export function ImageRecognition({ onSearch, className }: ImageRecognitionProps)
       )}
 
       {/* 错误提示 */}
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
-          >
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-red-500 rounded-full" />
-              <span className="text-sm text-red-700">{error}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+        >
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-red-500 rounded-full" />
+            <span className="text-sm text-red-700">{error}</span>
+          </div>
+        </motion.div>
+      )}
 
       {/* 识别结果 */}
-      <AnimatePresence>
-        {recognitionResults.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            <h3 className="text-lg font-semibold text-gray-900">
-              识别结果 ({recognitionResults.length} 项)
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {recognitionResults.map((result, index) => (
-                                 <motion.div
-                   key={index}
-                   initial={{ opacity: 0, scale: 0.9 }}
-                   animate={{ opacity: 1, scale: 1 }}
-                   transition={{ delay: index * 0.1 }}
-                   className="bg-white rounded-xl p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200"
-                 >
-                   <div className="flex items-center justify-between mb-3">
-                     <h4 className="font-semibold text-gray-900">
-                       {result.name || result.keyword || '未知对象'}
-                     </h4>
-                     <span className="text-sm text-gray-500">
-                       {(result.score * 100).toFixed(1)}%
-                     </span>
-                   </div>
-                   
-                   {/* 显示年份信息（车辆识别） */}
-                   {result.year && (
-                     <div className="mb-2">
-                       <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                         年份: {result.year}
-                       </span>
-                     </div>
-                   )}
-                   
-                   {result.baike_info && (
-                     <div className="mb-3">
-                       <p className="text-sm text-gray-600 line-clamp-2">
-                         {result.baike_info.description}
-                       </p>
-                     </div>
-                   )}
-                   
-                   <div className="flex items-center space-x-2">
-                     <button
-                       onClick={() => searchResult(result.name || result.keyword || '')}
-                       className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors duration-200"
-                     >
-                       <Search className="w-4 h-4 mr-1" />
-                       搜索
-                     </button>
-                     {result.baike_info?.baike_url && (
-                       <a
-                         href={result.baike_info.baike_url}
-                         target="_blank"
-                         rel="noopener noreferrer"
-                         className="px-3 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors duration-200"
-                       >
-                         百科
-                       </a>
-                     )}
-                   </div>
-                 </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {recognitionResults.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
+        >
+          <h3 className="text-lg font-semibold text-gray-900">
+            识别结果 ({recognitionResults.length} 项)
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recognitionResults.map((result, index) => (
+              <motion.div
+                key={`${result.name || result.keyword || 'item'}-${index}`}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white rounded-xl p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-gray-900">
+                    {result.name || result.keyword || '未知对象'}
+                  </h4>
+                  <span className="text-sm text-gray-500">
+                    {(result.score * 100).toFixed(1)}%
+                  </span>
+                </div>
+                {result.year && (
+                  <div className="mb-2">
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      年份: {result.year}
+                    </span>
+                  </div>
+                )}
+                {result.baike_info && (
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {result.baike_info.description}
+                    </p>
+                  </div>
+                )}
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => searchResult(result.name || result.keyword || '')}
+                    className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors duration-200"
+                  >
+                    <Search className="w-4 h-4 mr-1" />
+                    搜索
+                  </button>
+                  {result.baike_info?.baike_url && (
+                    <a
+                      href={result.baike_info.baike_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                    >
+                      百科
+                    </a>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

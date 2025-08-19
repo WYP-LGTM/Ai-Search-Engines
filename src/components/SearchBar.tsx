@@ -455,6 +455,17 @@ export function SearchBar({
     };
   }, [isFocused, suggestions.length]);
 
+  /**
+   * 清理图像识别状态当组件卸载时
+   */
+  useEffect(() => {
+    return () => {
+      if (showImageRecognition) {
+        setShowImageRecognition(false);
+      }
+    };
+  }, [showImageRecognition]);
+
   // 语音识别成功状态
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -676,15 +687,17 @@ export function SearchBar({
         </AnimatePresence>
 
         {/* 图像识别组件 */}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {showImageRecognition && (
             <motion.div
+              key="image-recognition"
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               className="mt-4"
             >
               <ImageRecognition
+                key="image-recognition-component"
                 onSearch={handleImageRecognitionSearch}
                 className="w-full"
               />
